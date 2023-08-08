@@ -1,4 +1,4 @@
-﻿using G_WebApi.Models;
+﻿using G_WebApi.Services.SuperHeroService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,51 +8,23 @@ namespace G_WebApi.Controllers
     [ApiController]
     public class SuperHeroController : ControllerBase
     {
-
-       private static List<SuperHero> superHeros = new List<SuperHero>
-            {
-                new SuperHero {
-                    Id = 1,
-                    Name = "Spider Man",
-                    FirstName = "Peter",
-                    LastName = "Parker",
-                    Place = "New York City"
-                },
-                 new SuperHero {
-                    Id = 2,
-                    Name = "Iron Man",
-                    FirstName = "Tony",
-                    LastName = "Stack",
-                    Place = "Malibu"
-                },
-                  new SuperHero {
-                    Id = 3,
-                    Name = "Thor",
-                    FirstName = "Chris",
-                    LastName = "B",
-                    Place = "Asgaurd"
-                },
-                  new SuperHero {
-                    Id =  4,
-                    Name = "Bat Man",
-                    FirstName = "Bruce",
-                    LastName = "Wayne",
-                    Place =  "Gotham City"
-                  }
-            };
-
+        private readonly ISuperHeroService _superHeroService;
+        public SuperHeroController(ISuperHeroService superHeroService)
+        {
+            _superHeroService = superHeroService;            
+        }
 
         [HttpGet]
         public async Task<ActionResult<List<SuperHero>>> GetAllHeros()
         {
-            return Ok(superHeros);
+            return await _superHeroService.GetAllHeros() ;
         }
 
 
         [HttpGet("{id}")]
         public async Task<ActionResult<SuperHero>> GetSingleHero(int id)
         {
-            var hero = superHeros.Find(x=>x.Id == id);
+            var hero = await _superHeroService.GetSingleHero(id);
             if(hero is null)
             {
                 return NotFound("Sorry! this hero doesn't eixst!");
@@ -63,26 +35,32 @@ namespace G_WebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<List<SuperHero>>> AddHero(SuperHero hero)
         {
-            superHeros.Add(hero);
-            return Ok(superHeros);
+           var result = await _superHeroService.AddHero(hero);
+           
+            return Ok(result);
         }
 
 
-        [HttpPut]
-        public async Task<ActionResult<List<SuperHero>>> UpdateHero(SuperHero request)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<List<SuperHero>>> UpdateHero(int id, SuperHero request)
         {
-            var hero = superHeros.Find(x => x.Id == request.Id);
-            if (hero is null){
+            var result = await _superHeroService.UpdateHero(id, request);
+            if (result is null){
                 return NotFound("Sorry! hero not found!");
             }
-            hero.FirstName = request.FirstName;
-            hero.LastName = request.LastName;
-            hero.Place = request.Place;
-            hero.Name = request.Name;
-
-            return Ok(superHeros);
+         
+            return Ok(result);
 
 
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<List<SuperHero>>> DeleteHero(int id)
+        {
+            var result = await _superHeroService.DeleteHero(id);
+            if (result is null)
+                return NotFound("Sorry hero not found!");
+            return Ok(result);
         }
     }
 }
